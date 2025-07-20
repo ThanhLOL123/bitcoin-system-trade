@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-pipeline
+  labels:
+    app: ml-pipeline
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ml-pipeline
+  template:
+    metadata:
+      labels:
+        app: ml-pipeline
+    spec:
+      containers:
+        - name: ml-pipeline
+          image: bitcoin-trading-system-ml-pipeline:latest # Replace with your image if you build it
+          env:
+            - name: MLFLOW_TRACKING_URI
+              value: "http://mlflow:5000"
+            - name: LOG_LEVEL
+              value: "INFO"
+          ports:
+            - containerPort: 8002 # Assuming metrics are exposed on this port
+          volumeMounts:
+            - mountPath: /app/logs
+              name: ml-pipeline-logs
+            - mountPath: /app/ml_models
+              name: ml-models-volume
+            - mountPath: /app/feature_store
+              name: feature-store-volume
+      volumes:
+        - name: ml-pipeline-logs
+          emptyDir: {}
+        - name: ml-models-volume
+          emptyDir: {} # Or a persistent volume for models
+        - name: feature-store-volume
+          persistentVolumeClaim:
+            claimName: feature-store-pv-claim # Re-use the claim from feature-engineering
+      dependsOn:
+        - mlflow
+        - postgresql
+        - redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ml-pipeline
+  labels:
+    app: ml-pipeline
+spec:
+  ports:
+    - port: 8002
+      targetPort: 8002
+  selector:
+    app: ml-pipeline
+  type: ClusterIP

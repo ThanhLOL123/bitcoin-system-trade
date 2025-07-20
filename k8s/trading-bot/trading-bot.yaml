@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trading-bot
+  labels:
+    app: trading-bot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trading-bot
+  template:
+    metadata:
+      labels:
+        app: trading-bot
+    spec:
+      containers:
+        - name: trading-bot
+          image: bitcoin-trading-system-trading-bot:latest # Replace with your image if you build it
+          env:
+            - name: MT5_LOGIN
+              valueFrom:
+                secretKeyRef:
+                  name: mt5-secrets
+                  key: login
+            - name: MT5_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mt5-secrets
+                  key: password
+            - name: MT5_SERVER
+              valueFrom:
+                secretKeyRef:
+                  name: mt5-secrets
+                  key: server
+            - name: MT5_RPC_HOST
+              value: "mt5-server"
+            - name: MT5_RPC_PORT
+              value: "18812"
+            - name: LOG_LEVEL
+              value: "INFO"
+          ports:
+            - containerPort: 8003 # Assuming metrics are exposed on this port
+          volumeMounts:
+            - mountPath: /app/logs
+              name: trading-bot-logs
+      volumes:
+        - name: trading-bot-logs
+          emptyDir: {}
+      dependsOn:
+        - kafka
+        - redis
+        - ml-pipeline
+        - mt5-server
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: trading-bot
+  labels:
+    app: trading-bot
+spec:
+  ports:
+    - port: 8003
+      targetPort: 8003
+  selector:
+    app: trading-bot
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mt5-secrets
+stringData:
+  login: "your_mt5_login"
+  password: "your_mt5_password"
+  server: "your_mt5_server"

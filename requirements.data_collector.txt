@@ -1,0 +1,4 @@
+aiohttp
+kafka-python
+redis
+fake-useragent

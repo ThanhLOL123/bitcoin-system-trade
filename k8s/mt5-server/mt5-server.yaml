@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mt5-server
+  labels:
+    app: mt5-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mt5-server
+  template:
+    metadata:
+      labels:
+        app: mt5-server
+    spec:
+      containers:
+        - name: mt5-server
+          image: bitcoin-trading-system-mt5-server:latest # Replace with your image if you build it
+          ports:
+            - containerPort: 18812
+          env:
+            - name: MT5_LOGIN
+              valueFrom:
+                secretKeyRef:
+                  name: mt5-secrets
+                  key: login
+            - name: MT5_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mt5-secrets
+                  key: password
+            - name: MT5_SERVER
+              valueFrom:
+                secretKeyRef:
+                  name: mt5-secrets
+                  key: server

@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-collector
+  labels:
+    app: data-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-collector
+  template:
+    metadata:
+      labels:
+        app: data-collector
+    spec:
+      containers:
+        - name: data-collector
+          image: bitcoin-trading-system-data-collector:latest # Replace with your image if you build it
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+            - name: LOG_LEVEL
+              value: "INFO"
+            - name: REDDIT_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: reddit-secrets
+                  key: client_id
+            - name: REDDIT_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: reddit-secrets
+                  key: client_secret
+            - name: REDDIT_USER_AGENT
+              value: "bitcoin-trader-v1.0"
+          ports:
+            - containerPort: 8000 # Assuming metrics are exposed on this port
+          volumeMounts:
+            - mountPath: /app/logs
+              name: data-collector-logs
+      volumes:
+        - name: data-collector-logs
+          emptyDir: {}
+      dependsOn:
+        - kafka
+        - redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-collector
+  labels:
+    app: data-collector
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+  selector:
+    app: data-collector
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: reddit-secrets
+stringData:
+  client_id: "your_reddit_client_id"
+  client_secret: "your_reddit_client_secret"

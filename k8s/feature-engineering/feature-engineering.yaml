@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feature-engineering
+  labels:
+    app: feature-engineering
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: feature-engineering
+  template:
+    metadata:
+      labels:
+        app: feature-engineering
+    spec:
+      containers:
+        - name: feature-engineering
+          image: bitcoin-trading-system-feature-engineering:latest # Replace with your image if you build it
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+            - name: LOG_LEVEL
+              value: "INFO"
+          ports:
+            - containerPort: 8001 # Assuming metrics are exposed on this port
+          volumeMounts:
+            - mountPath: /app/logs
+              name: feature-engineering-logs
+            - mountPath: /app/feature_store
+              name: feature-store-volume
+      volumes:
+        - name: feature-engineering-logs
+          emptyDir: {}
+        - name: feature-store-volume
+          persistentVolumeClaim:
+            claimName: feature-store-pv-claim
+      dependsOn:
+        - kafka
+        - postgresql
+        - redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: feature-engineering
+  labels:
+    app: feature-engineering
+spec:
+  ports:
+    - port: 8001
+      targetPort: 8001
+  selector:
+    app: feature-engineering
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: feature-store-pv-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi

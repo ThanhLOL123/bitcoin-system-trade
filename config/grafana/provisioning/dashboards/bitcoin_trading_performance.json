@@ -1,0 +1,75 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Bitcoin Trading Performance",
+    "tags": ["bitcoin", "trading", "performance"],
+    "timezone": "UTC",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Total Trades",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(trades_total)",
+            "legendFormat": "Total Trades"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Current PnL",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "current_pnl",
+            "legendFormat": "Current PnL"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Account Equity",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "account_equity",
+            "legendFormat": "Account Equity"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "Current Drawdown",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "current_drawdown",
+            "legendFormat": "Current Drawdown (%)"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0}
+      },
+      {
+        "id": 5,
+        "title": "Order Latency",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(order_latency_seconds_sum[5m]) / rate(order_latency_seconds_count[5m])",
+            "legendFormat": "Average Order Latency"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 4}
+      }
+    ],
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "refresh": "5s"
+  }
+}
